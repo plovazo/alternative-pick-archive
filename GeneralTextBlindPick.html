@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <style>
+        .main-body {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+
+        footer {
+            text-align: center;
+            padding: 10px 0;
+            background-color: #333;
+            color: white;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .input-row label {
+            width: 80px;
+            font-weight: bold;
+        }
+
+        .input-row input[type="password"],
+        .input-row input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .input-row div {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-row input[type="radio"] {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Body -->
+    <div class="main-body">
+        <!--<h1>Welcome to blind selector</h1> -->
+        <p>Both players can pick their units without knowing opponent's units with this blind selector. To use this blind selector, the host player on Parsec must open this page. Next each player types their units below, then click reveal text button. After clicking button, the text is revealed and editing is disabled. Refresh page to restart. </p>
+        <p></p>
+
+        <!-- Labeled Password-style textboxes -->
+        <form autocomplete="off" onsubmit="return false;">
+            <!-- Radio Buttons -->
+            <div class="input-row">
+                <label>Host will play as: </label>
+                <div>
+                    <label><input type="radio" name="pzChoice" value="P"> P</label>
+                    <label><input type="radio" name="pzChoice" value="Z"> Z</label>
+                </div>
+            </div>
+
+<!-- Add this inside your <body> where the input fields are -->
+  <div class="input-row">
+      <label for="plantsInput">Plants</label>
+      <input id="plantsInput" type="password" placeholder="puff coffeeB" autocomplete="off" name="plant-entry" oninput="updateCounts('plantsInput', 'plantsCount')">
+  </div>
+  <div id="plantsCount" style="margin-left: 80px; color: gray;"></div>
+
+  <div class="input-row">
+      <label for="zombiesInput">Zombies</label>
+      <input id="zombiesInput" type="password" placeholder="basic football" autocomplete="off" name="zombie-entry" oninput="updateCounts('zombiesInput', 'zombiesCount')">
+  </div>
+  <div id="zombiesCount" style="margin-left: 80px; color: gray;"></div>
+
+            <label for="">Check when first player finish typing (click or tab space)</label>
+            <input type="checkbox" name="zCheck" style="margin-left: 10px;">
+        </form>
+
+        <!-- Reveal Button -->
+        <button onclick="revealPasswords()" tabindex="-1" onkeydown="event.preventDefault()">Reveal Loadout</button>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>Made by Plovazo</p>
+    </footer>
+
+    <script>
+        function revealPasswords() {
+            const inputs = document.querySelectorAll('input[type="password"]');
+            inputs.forEach(input => {
+                input.type = 'text';
+                input.readOnly = true; // Prevent further editing
+            });
+        }
+    </script>
+<script>
+    function updateCounts(inputId, countId) {
+        const input = document.getElementById(inputId);
+        const countDiv = document.getElementById(countId);
+        const text = input.value;
+        const spaceCount = (text.match(/ /g) || []).length;
+        const commaCount = (text.match(/,/g) || []).length;
+
+        countDiv.textContent = `Spaces: ${spaceCount}, Commas: ${commaCount}`;
+    }
+
+    function revealPasswords() {
+        const inputs = document.querySelectorAll('input[type="password"]');
+        inputs.forEach(input => {
+            input.type = 'text';
+            input.readOnly = true;
+        });
+
+        // Optionally freeze the count too
+        updateCounts('plantsInput', 'plantsCount');
+        updateCounts('zombiesInput', 'zombiesCount');
+    }
+</script>
+
+</body>
+</html>
