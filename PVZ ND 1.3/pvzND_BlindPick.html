@@ -219,6 +219,7 @@
 
     <div id="role-modal">
         <div class="modal-content">
+            <h2>PVZ ND Blind Picker By Plovazo</h2>
             <h2>Who is using the Mouse?</h2>
             <p>The other player will use the Keyboard (A-Z, 1-9) with hidden picks.</p>
             <button onclick="startGame('plant')">Plants use Mouse</button>
@@ -237,6 +238,7 @@
     </p>
 
     <button id="main-btn" class="action-btn" onclick="advancePhase()" disabled>Waiting for Draft</button>
+    <button id="copy-btn" class="action-btn" onclick="copyDecksToClipboard()" style="display: none; background-color: #4CAF50;">Copy Decks to Clipboard</button>
 
     <div class="main-layout">
         <div class="side-panel plants-panel disabled-panel" id="plant-panel">
@@ -533,9 +535,10 @@
             const plantPanel = document.getElementById('plant-panel');
             const zombiePanel = document.getElementById('zombie-panel');
             const btn = document.getElementById('main-btn');
+            const copyBtn = document.getElementById('copy-btn');
 
             if (currentPhase === 'keyboard_draft') {
-                statusText.innerHTML = `<strong>Phase 1: Keyboard Draft.</strong> The ${keyboardPlayer} player drafts ${SLOT_COUNT} units secretly using A-Z and 1-9.`;
+                statusText.innerHTML = `<strong>Phase 1: Keyboard Draft.</strong> The ${keyboardPlayer} player drafts ${SLOT_COUNT} units secretly using A-Z and 1-9. Backspace removes the last pick, and Enter confirms the draft. Use arrow keys to change pages and view other units.`;
                 btn.innerText = `Confirm ${keyboardPlayer} Deck`;
                 
                 if (keyboardPlayer === 'plant') {
@@ -559,6 +562,7 @@
             } else if (currentPhase === 'reveal') {
                 statusText.innerHTML = "<strong>Phase 3: The Matchup!</strong> Both decks are revealed. Good luck.";
                 btn.style.display = 'none';
+                copyBtn.style.display = 'inline-block';
                 plantPanel.classList.add('disabled-panel');
                 zombiePanel.classList.add('disabled-panel');
             }
@@ -573,6 +577,39 @@
             updateUIForPhase();
             renderRosters();
             renderTopSlots();
+        }
+
+        // ==========================================
+        // 6. CLIPBOARD FUNCTIONALITY
+        // ==========================================
+        function copyDecksToClipboard() {
+            // Helper function to extract just the name from "Folder/Filename.png"
+            const formatName = (path) => path.split('/').pop().split('.')[0];
+
+            const plantNames = draftedPlants.map(formatName).join(', ');
+            const zombieNames = draftedZombies.map(formatName).join(', ');
+            
+            const exportString = `Plants: ${plantNames}\nZombies: ${zombieNames}`;
+
+            // Create a temporary textarea to execute the copy command reliably
+            const textArea = document.createElement("textarea");
+            textArea.value = exportString;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            
+            document.body.removeChild(textArea);
+
+            // Change button text temporarily to confirm the action
+            const copyBtn = document.getElementById('copy-btn');
+            const originalText = copyBtn.innerText;
+            copyBtn.innerText = "Copied to Clipboard!";
+            setTimeout(() => { copyBtn.innerText = originalText; }, 2000);
         }
     </script>
 </body>
