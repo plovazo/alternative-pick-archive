@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PvZ Versus Mode Card Picker</title>
+    <style>
+        :root {
+            --plant-color: #4CAF50;
+            --zombie-color: #9C27B0;
+            --bg-color: #2b2b2b;
+            --text-color: #ffffff;
+            --disabled-color: #555555;
+            --unit-size: 50px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Top Bar & Slots */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #1a1a1a;
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .slot-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .slot {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed #555;
+            border-radius: 8px;
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slot img { ////////////////////////////////////////////////////////////////////////////
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .slot.clickable {
+            cursor: pointer;
+            border-color: #aaa;
+        }
+        .slot.clickable:hover {
+            border-color: #fff;
+        }
+
+        /* Typography & Buttons */
+        .description {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            line-height: 1.5;
+            color: #cccccc;
+        }
+
+        .action-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+            margin-bottom: 30px;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            background-color: #1976D2;
+        }
+
+        .action-btn:disabled {
+            background-color: var(--disabled-color);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Main Grid Layout */
+        .main-layout {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .side-panel {
+            flex: 1;
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 45%;
+            transition: opacity 0.3s;
+        }
+
+        .side-panel.disabled-panel {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .side-panel h2 {
+            margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .plants-panel h2 { color: var(--plant-color); }
+        .zombies-panel h2 { color: var(--zombie-color); }
+
+        .unit-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .plants-panel .unit-grid {
+            justify-content: center; /* Aligns the Plants to the left */
+        }
+
+        .unit { ////////////////////////////////////////////////////////////////////
+            width: var(--unit-size);
+            height: var(--unit-size);
+            background-color: #333;
+            border-radius: 5px;
+            border: 2px solid #444;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .unit img { ////////////////////////////////////////////////////
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            opacity: 0.9;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .plants-panel .unit {
+            cursor: pointer;
+        }
+
+        .plants-panel .unit:hover img {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        .unit.selected {
+            border-color: #fff;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* Alphabet Overlay for Zombies */
+        .zombie-letter {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px black, -1px -1px 2px black, 1px -1px 2px black, -1px 1px 2px black;
+            pointer-events: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="slot-container" id="plant-slots"></div>
+        <h2>VS</h2>
+        <div class="slot-container" id="zombie-slots"></div>
+    </div>
+
+    <p class="description" id="status-text">
+        <i>This web tool works for PC only. </i><strong>Phase 1: Zombie Draft.</strong> Press the corresponding letter on your keyboard (A-R) to secretly draft a zombie. Press <strong>Backspace</strong> to undo your last pick. Press <strong>Enter</strong> to confirm your full deck.
+    </p>
+
+    <button id="main-btn" class="action-btn" onclick="advancePhase()" disabled>Confirm Zombie Deck</button>
+
+    <div class="main-layout">
+        <div class="side-panel plants-panel disabled-panel" id="plant-panel">
+            <h2>Plants Roster</h2>
+            <div class="unit-grid" id="plants-roster"></div>
+        </div>
+
+        <div class="side-panel zombies-panel" id="zombie-panel">
+            <h2>Zombies Roster</h2>
+            <div class="unit-grid" id="zombies-roster"></div>
+        </div>
+    </div>
+
+Phase1, plants ban 1 zombie.
+Phase2, zombies ban 1 plant.
+Phase3, 1 random plant is given.
+Phase4, zombies pick x cards (x is 0-5) as desired, while the remaining is randomly selected.
+Phase5, plants pick the remaining 4 cards.
+Phase6, any remaining zombies are randomly picked.
+    
+<script>
+    // ==========================================
+    // 1. CONFIGURATION & CUSTOM ARRAYS
+    // ==========================================
+    const PLANT_DIR = 'Plant_Images/';
+    const ZOMBIE_DIR = 'Zombie_Images/';
+    
+    const MYSTERY_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiM0NDQiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIyNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI2ZmZiI+PzwvdGV4dD48L3N2Zz4=';
+
+    const plantFilenames = [
+        "Peashooter.png", "CherryBomb.png", "WallNut.png", "PotatoMine.png", "Snowpea.png", "Chomper.png", "Repeater.png", "PuffShroom.png",
+        "SunShroom.png", "FumeShroom.png", "GraveBuster.png", "HypnoShroom.png", "ScaredyShroom.png", "IceShroom.png", "DoomShroom.png", "Squash.png",
+        "Threepeater.png", "Jalapeno.png", "Spikeweed.png", "Torchwood.png", "TallNut.png", "Cactus.png", "SplitPea.png", "Starfruit.png",
+        "Pumpkin.png", "MagnetShroom.png", "CabbagePult.png", "KernelPult.png", "CoffeeBean.png", "Garlic.png", "UmbrellaLeaf.png", "MelonPult.png"
+    ];
+
+    const zombieFilenames = [
+            "Basic.png", "Trashcan.png", "Cone.png", "PoleVaulting.png","Bucket.png","Flag.png","Newspaper.png",
+            "ScreenDoor.png","Football.png","Dancing.png","Zomboni.png",
+            "JackInTheBox.png","Digger.png","Pogo.png","Bungee.png","Ladder.png","Catapult.png","Gargantuar.png"
+    ];
+
+    // ==========================================
+    // 2. NEW STATE MANAGEMENT (6 Phases)
+    // ==========================================
+    let currentPhase = 'phase1_plant_ban'; 
+    let draftedZombies = [];
+    let draftedPlants = [];
+    let bannedZombies = [];
+    let bannedPlants = [];
+
+    // ==========================================
+    // 3. INITIALIZATION & KEYBOARD CONTROLS
+    // ==========================================
+    window.onload = () => {
+        renderRoster('plants-roster', plantFilenames, PLANT_DIR, 'plant');
+        renderRoster('zombies-roster', zombieFilenames, ZOMBIE_DIR, 'zombie');
+        renderTopSlots();
+        updateUIState();
+    };
+
+    // Keyboard listener for Zombie Secret Draft Phase (Kept for dual-input support)
+    document.addEventListener('keydown', (e) => {
+        const key = e.key.toUpperCase();
+
+        // Handle Backspace (Undo for Zombies)
+        if (key === 'BACKSPACE') {
+            if (currentPhase === 'phase4_zombie_pick' && draftedZombies.length > 0) {
+                draftedZombies.pop();
+                renderTopSlots();
+                updateUIState();
+            }
+            return;
+        }
+
+        // Handle Enter (Confirm Deck early)
+        if (key === 'ENTER') {
+            if (currentPhase === 'phase4_zombie_pick') {
+                advancePhase(); 
+            }
+            return;
+        }
+
+        // Handle Alphabet Selection (A-R)
+        if (currentPhase === 'phase4_zombie_pick') {
+            const charCode = key.charCodeAt(0);
+            if (key.length === 1 && charCode >= 65 && charCode < 65 + zombieFilenames.length) {
+                const index = charCode - 65;
+                const fullPath = ZOMBIE_DIR + zombieFilenames[index];
+                
+                if (draftedZombies.length < 5 && !draftedZombies.includes(fullPath) && !bannedZombies.includes(fullPath)) {
+                    draftedZombies.push(fullPath);
+                    renderTopSlots();
+                    updateUIState();
+                }
+            }
+        }
+    });
+
+    // ==========================================
+    // 4. RENDERING FUNCTIONS
+    // ==========================================
+    function renderRoster(containerId, filenames, directory, type) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = ''; 
+
+        filenames.forEach((filename, index) => {
+            const fullPath = directory + filename;
+            const unitDiv = document.createElement('div');
+            unitDiv.className = 'unit';
+            
+            // Unified click handler that routes based on the current phase
+            unitDiv.onclick = () => selectUnit(fullPath, type);
+
+            const img = document.createElement('img');
+            img.src = fullPath;
+            img.alt = filename;
+            img.onerror = function() { this.src = MYSTERY_ICON; };
+            unitDiv.appendChild(img);
+
+            if (type === 'zombie') {
+                const letterSpan = document.createElement('span');
+                letterSpan.className = 'zombie-letter';
+                letterSpan.innerText = String.fromCharCode(65 + index); 
+                unitDiv.appendChild(letterSpan);
+            }
+
+            // Apply dynamic visual states (Banned / Selected)
+            if (type === 'plant') {
+                if (bannedPlants.includes(fullPath)) {
+                    applyBannedStyle(unitDiv);
+                } else if (draftedPlants.includes(fullPath)) {
+                    unitDiv.classList.add('selected');
+                }
+            } else if (type === 'zombie') {
+                if (bannedZombies.includes(fullPath)) {
+                    applyBannedStyle(unitDiv);
+                }
+                // Note: We deliberately do NOT apply a 'selected' class for zombies 
+                // to maintain blind draft secrecy if screen sharing/side-by-side.
+            }
+
+            container.appendChild(unitDiv);
+        });
+    }
+
+    function applyBannedStyle(el) {
+        el.style.borderColor = '#ff4444';
+        el.style.opacity = '0.2';
+        el.style.pointerEvents = 'none';
+    }
+
+    function renderTopSlots() {
+        renderSideSlots('plant-slots', draftedPlants, 'plant');
+        renderSideSlots('zombie-slots', draftedZombies, 'zombie');
+    }
+
+    function renderSideSlots(containerId, draftArray, type) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        for (let i = 0; i < 5; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'slot';
+
+            if (draftArray[i]) {
+                const img = document.createElement('img');
+                
+                if (type === 'zombie' && currentPhase !== 'reveal') {
+                    img.src = MYSTERY_ICON;
+                } else {
+                    img.src = draftArray[i];
+                }
+                slot.appendChild(img);
+
+                // Add click-to-remove logic for plants (protecting the random index 0)
+                if (type === 'plant' && currentPhase === 'phase5_plant_pick' && i > 0) {
+                    slot.classList.add('clickable');
+                    slot.onclick = () => removeUnit(i, 'plant');
+                }
+                
+                // Add click-to-remove logic for zombies during their draft phase
+                if (type === 'zombie' && currentPhase === 'phase4_zombie_pick') {
+                    slot.classList.add('clickable');
+                    slot.onclick = () => removeUnit(i, 'zombie');
+                }
+            }
+            container.appendChild(slot);
+        }
+    }
+
+    // ==========================================
+    // 5. PHASE ROUTING & LOGIC
+    // ==========================================
+    function selectUnit(fullPath, type) {
+        if (currentPhase === 'phase1_plant_ban' && type === 'zombie') {
+            if (!bannedZombies.includes(fullPath)) {
+                bannedZombies.push(fullPath);
+                renderRoster('zombies-roster', zombieFilenames, ZOMBIE_DIR, 'zombie');
+                advancePhase();
+            }
+        } else if (currentPhase === 'phase2_zombie_ban' && type === 'plant') {
+            if (!bannedPlants.includes(fullPath)) {
+                bannedPlants.push(fullPath);
+                renderRoster('plants-roster', plantFilenames, PLANT_DIR, 'plant');
+                advancePhase();
+            }
+        } else if (currentPhase === 'phase4_zombie_pick' && type === 'zombie') {
+            // New Mouse Selection Logic for Zombies
+            if (draftedZombies.length < 5 && !draftedZombies.includes(fullPath) && !bannedZombies.includes(fullPath)) {
+                draftedZombies.push(fullPath);
+                renderTopSlots();
+                updateUIState();
+            }
+        } else if (currentPhase === 'phase5_plant_pick' && type === 'plant') {
+            if (draftedPlants.length < 5 && !draftedPlants.includes(fullPath) && !bannedPlants.includes(fullPath)) {
+                draftedPlants.push(fullPath);
+                renderRoster('plants-roster', plantFilenames, PLANT_DIR, 'plant');
+                renderTopSlots();
+                
+                if (draftedPlants.length === 5) {
+                    advancePhase();
+                } else {
+                    updateUIState(); 
+                }
+            }
+        }
+    }
+
+    function removeUnit(index, type) {
+        if (type === 'plant' && currentPhase === 'phase5_plant_pick') {
+            draftedPlants.splice(index, 1);
+            renderRoster('plants-roster', plantFilenames, PLANT_DIR, 'plant');
+            renderTopSlots();
+            updateUIState();
+        } else if (type === 'zombie' && currentPhase === 'phase4_zombie_pick') {
+            draftedZombies.splice(index, 1);
+            renderTopSlots();
+            updateUIState();
+        }
+    }
+
+    function advancePhase() {
+        if (currentPhase === 'phase1_plant_ban') {
+            currentPhase = 'phase2_zombie_ban';
+            
+        } else if (currentPhase === 'phase2_zombie_ban') {
+            currentPhase = 'phase3_random_plant';
+            executeRandomPlant();
+            return; // Auto-advances
+            
+        } else if (currentPhase === 'phase4_zombie_pick') {
+            currentPhase = 'phase5_plant_pick';
+            
+        } else if (currentPhase === 'phase5_plant_pick') {
+            currentPhase = 'phase6_random_zombies';
+            executeRandomZombies();
+            return; // Auto-advances
+            
+        } else if (currentPhase === 'phase6_random_zombies') {
+            currentPhase = 'reveal';
+        }
+        updateUIState();
+    }
+
+    // ==========================================
+    // 6. RANDOMIZERS (Phases 3 & 6)
+    // ==========================================
+    function executeRandomPlant() {
+        let available = plantFilenames.map(f => PLANT_DIR + f).filter(p => !bannedPlants.includes(p));
+        let pick = available[Math.floor(Math.random() * available.length)];
+        draftedPlants.push(pick);
+        
+        renderRoster('plants-roster', plantFilenames, PLANT_DIR, 'plant');
+        renderTopSlots();
+        
+        // Advance immediately to Phase 4
+        currentPhase = 'phase4_zombie_pick';
+        updateUIState();
+    }
+
+    function executeRandomZombies() {
+        let available = zombieFilenames.map(f => ZOMBIE_DIR + f).filter(z => !bannedZombies.includes(z) && !draftedZombies.includes(z));
+        
+        while (draftedZombies.length < 5 && available.length > 0) {
+            let rIndex = Math.floor(Math.random() * available.length);
+            let pick = available.splice(rIndex, 1)[0];
+            draftedZombies.push(pick);
+        }
+        
+        renderTopSlots();
+        
+        // Advance immediately to Reveal
+        currentPhase = 'reveal';
+        updateUIState();
+    }
+
+    // ==========================================
+    // 7. UI STATE MACHINE
+    // ==========================================
+    function updateUIState() {
+        const btn = document.getElementById('main-btn');
+        const statusText = document.getElementById('status-text');
+        const zombiePanel = document.getElementById('zombie-panel');
+        const plantPanel = document.getElementById('plant-panel');
+
+        // Default Resets
+        plantPanel.classList.add('disabled-panel');
+        zombiePanel.classList.add('disabled-panel');
+        btn.style.display = 'none';
+
+        switch(currentPhase) {
+            case 'phase1_plant_ban':
+                zombiePanel.classList.remove('disabled-panel');
+                statusText.innerHTML = "<strong>Phase 1: Plant Ban.</strong> Plants, click 1 Zombie to ban them from the match.";
+                break;
+                
+            case 'phase2_zombie_ban':
+                plantPanel.classList.remove('disabled-panel');
+                statusText.innerHTML = "<strong>Phase 2: Zombie Ban.</strong> Zombies, click 1 Plant to ban them from the match.";
+                break;
+                
+            case 'phase4_zombie_pick':
+                zombiePanel.classList.remove('disabled-panel');
+                statusText.innerHTML = `<strong>Phase 4: Zombie Draft.</strong> Zombies, click or use keys (A-R) to pick up to 5 cards (currently ${draftedZombies.length}/5). Click top slots to undo. Press <strong>Enter</strong> or click below to confirm.`;
+                btn.innerText = "Confirm Zombie Picks";
+                btn.disabled = false;
+                btn.style.display = 'inline-block';
+                btn.onclick = advancePhase;
+                break;
+                
+            case 'phase5_plant_pick':
+                plantPanel.classList.remove('disabled-panel');
+                let remaining = 5 - draftedPlants.length;
+                statusText.innerHTML = `<strong>Phase 5: Plant Draft.</strong> Plants, click to select ${remaining} more card(s). Slot 1 is your random unit. Click top slots to undo.`;
+                break;
+                
+            case 'reveal':
+                plantPanel.classList.remove('disabled-panel');
+                zombiePanel.classList.remove('disabled-panel');
+                statusText.innerHTML = "<strong>Phase 6 Complete: The Matchup!</strong> Random zombies were assigned. Decks are revealed. Good luck.";
+                renderTopSlots(); // Re-render to expose zombie identities
+                break;
+        }
+    }
+</script>
+
+
+</body>
+</html>
