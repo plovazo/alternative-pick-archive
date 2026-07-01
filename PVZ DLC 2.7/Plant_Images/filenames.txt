@@ -1,0 +1,170 @@
+AloeVera.png
+Ampliflower.png
+Beeshooter.png
+BloodOrange.png
+Blover.png
+BonkChoy.png
+BraveryShroom.png
+CabbagePult.png
+Cactus.png
+Cattail.png
+ChardGuard.png
+CherryBomb.png
+ChillyPepper.png
+Chomper.png
+CobCannon.png
+CoffeeBean.png
+Devourer.png
+DoomShroom.png
+ElectricPeashooter.png
+filenames copy.txt
+filenames.txt
+FirePea.png
+FireShroom.png
+FlowerPot.png
+FrostShroom.png
+FumeShroom.png
+Garlic.png
+GatlingPea.png
+GhostPepper.png
+GloomShroom.png
+GoldMagnet.png
+GraveBuster.png
+Hurrikale.png
+HypnoShroom.png
+IcePea.png
+IceShroom.png
+Jalapeno.png
+KernelPult.png
+LemonNade.png
+LightningReed.png
+LilyPad.png
+LumeShroom.png
+MagnetShroom.png
+Marigold.png
+MelonPult.png
+MortarShroom.png
+OakArcher.png
+Orbitus.png
+Peashooter.png
+PepperPult.png
+PickledPepper.png
+Plantern.png
+PlasmaPea.png
+Plasmawood.png
+PotatoMine.png
+PuffShroom.png
+PultShroom.png
+Pumpkin.png
+Repeater.png
+ScaredyShroom.png
+SeaShroom.png
+Seastar.png
+ShootingStar.png
+ShrinkingViolet.png
+Snowpea.png
+SpikeRock.png
+Spikeweed.png
+SplitPea.png
+Squash.png
+Starfruit.png
+Sunflower.png
+SunShroom.png
+TallNut.png
+TangleKelp.png
+Thornmoss.png
+Threepeater.png
+Torchwood.png
+TwinSunflower.png
+UmbrellaLeaf.png
+VineNut.png
+VoltShroom.png
+WallNut.png
+WaterPot.png
+WinterMelon.png
+
+
+const plantFilenames = [
+    "AloeVera.png",
+    "Ampliflower.png",
+    "Beeshooter.png",
+    "BloodOrange.png",
+    "Blover.png",
+    "BonkChoy.png",
+    "BraveryShroom.png",
+    "CabbagePult.png",
+    "Cactus.png",
+    "Cattail.png",
+    "ChardGuard.png",
+    "CherryBomb.png",
+    "ChillyPepper.png",
+    "Chomper.png",
+    "CobCannon.png",
+    "CoffeeBean.png",
+    "Devourer.png",
+    "DoomShroom.png",
+    "ElectricPeashooter.png",
+    "FirePea.png",
+    "FireShroom.png",
+    "FlowerPot.png",
+    "FrostShroom.png",
+    "FumeShroom.png",
+    "Garlic.png",
+    "GatlingPea.png",
+    "GhostPepper.png",
+    "GloomShroom.png",
+    "GoldMagnet.png",
+    "GraveBuster.png",
+    "Hurrikale.png",
+    "HypnoShroom.png",
+    "IcePea.png",
+    "IceShroom.png",
+    "Jalapeno.png",
+    "KernelPult.png",
+    "LemonNade.png",
+    "LightningReed.png",
+    "LilyPad.png",
+    "LumeShroom.png",
+    "MagnetShroom.png",
+    "Marigold.png",
+    "MelonPult.png",
+    "MortarShroom.png",
+    "OakArcher.png",
+    "Orbitus.png",
+    "Peashooter.png",
+    "PepperPult.png",
+    "PickledPepper.png",
+    "Plantern.png",
+    "PlasmaPea.png",
+    "Plasmawood.png",
+    "PotatoMine.png",
+    "PuffShroom.png",
+    "PultShroom.png",
+    "Pumpkin.png",
+    "Repeater.png",
+    "ScaredyShroom.png",
+    "SeaShroom.png",
+    "Seastar.png",
+    "ShootingStar.png",
+    "ShrinkingViolet.png",
+    "Snowpea.png",
+    "SpikeRock.png",
+    "Spikeweed.png",
+    "SplitPea.png",
+    "Squash.png",
+    "Starfruit.png",
+    "Sunflower.png",
+    "SunShroom.png",
+    "TallNut.png",
+    "TangleKelp.png",
+    "Thornmoss.png",
+    "Threepeater.png",
+    "Torchwood.png",
+    "TwinSunflower.png",
+    "UmbrellaLeaf.png",
+    "VineNut.png",
+    "VoltShroom.png",
+    "WallNut.png",
+    "WaterPot.png",
+    "WinterMelon.png"
+];
