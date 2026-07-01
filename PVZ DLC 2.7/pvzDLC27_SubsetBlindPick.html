@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PvZ Versus Mode Blind Draft</title>
+    <style>
+        :root {
+            --plant-color: #4CAF50;
+            --zombie-color: #9C27B0;
+            --bg-color: #2b2b2b;
+            --text-color: #ffffff;
+            --disabled-color: #555555;
+            --unit-size: 50px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Pre-game Modal */
+        #role-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: flex;
+            justify-content: center; align-items: center; z-index: 100;
+        }
+        
+        .modal-content {
+            background: #222; padding: 40px; border-radius: 12px;
+            border: 2px solid #555; text-align: center;
+        }
+        
+        .modal-content button {
+            margin: 10px; padding: 15px 30px; font-size: 1.2rem;
+            cursor: pointer; background: #2196F3; color: white; border: none; border-radius: 5px;
+        }
+        
+        .modal-content button:hover { background: #1976D2; }
+
+        /* Top Bar & Slots */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #1a1a1a;
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .slot-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .slot {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed #555;
+            border-radius: 8px;
+            background-color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slot img { 
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .slot.clickable {
+            cursor: pointer;
+            border-color: #aaa;
+        }
+        .slot.clickable:hover {
+            border-color: #fff;
+        }
+
+        /* Typography & Buttons */
+        .description {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            line-height: 1.5;
+            color: #cccccc;
+        }
+
+        .action-btn {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+            margin-bottom: 30px;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            background-color: #1976D2;
+        }
+
+        .action-btn:disabled {
+            background-color: var(--disabled-color);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Main Grid Layout */
+        .main-layout {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .side-panel {
+            flex: 1;
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 45%;
+            transition: opacity 0.3s;
+        }
+
+        .side-panel.disabled-panel {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .side-panel h2 {
+            margin-top: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .plants-panel h2 { color: var(--plant-color); }
+        .zombies-panel h2 { color: var(--zombie-color); }
+
+        .unit-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .unit { 
+            width: var(--unit-size);
+            height: var(--unit-size);
+            background-color: #333;
+            border-radius: 5px;
+            border: 2px solid #444;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .unit img { 
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            opacity: 0.9;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .unit:hover img {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        .unit.selected {
+            border-color: #fff;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* Hotkey Overlay for Keyboard Player */
+        .zombie-letter {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px black, -1px -1px 2px black, 1px -1px 2px black, -1px 1px 2px black;
+            pointer-events: none;
+        }
+
+        /* Pagination Controls */
+        .pagination-controls {
+            display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;
+        }
+        
+        .page-btn {
+            padding: 8px 16px; background: #444; color: white; border: none; border-radius: 4px; cursor: pointer;
+        }
+        
+        .page-btn:hover { background: #666; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    </style>
+</head>
+<body>
+
+    <div id="role-modal">
+        <div class="modal-content">
+            <h2>PVZ DLC 2.7 Random-Subset Blind Picker By Plovazo</h2>
+            <h3>Each player blind picks from a random set of units</h3>
+            <h2>Who is using the Mouse?</h2>
+            <p>The other player will use the Keyboard (A-Z, 1-9) with hidden picks.</p>
+            <button onclick="startGame('plant')">Plants use Mouse</button>
+            <button onclick="startGame('zombie')">Zombies use Mouse</button>
+        </div>
+    </div>
+
+    <div class="top-bar">
+        <div class="slot-container" id="plant-slots"></div>
+        <h2>VS</h2>
+        <div class="slot-container" id="zombie-slots"></div>
+    </div>
+
+    <p class="description" id="status-text">
+        <i>Waiting for role selection...</i>
+    </p>
+
+    <button id="main-btn" class="action-btn" onclick="advancePhase()" disabled>Waiting for Draft</button>
+    <button id="copy-btn" class="action-btn" onclick="copyDecksToClipboard()" style="display: none; background-color: #4CAF50;">Copy Decks to Clipboard</button>
+
+    <div class="main-layout">
+        <div class="side-panel plants-panel disabled-panel" id="plant-panel">
+            <h2>Plants Roster</h2>
+            <div class="unit-grid" id="plants-roster"></div>
+        </div>
+
+        <div class="side-panel zombies-panel disabled-panel" id="zombie-panel">
+            <h2>Zombies Roster</h2>
+            <div class="unit-grid" id="zombies-roster"></div>
+        </div>
+    </div>
+
+<script>
+        // ==========================================
+        // 1. CONFIGURATION & CUSTOM ARRAYS
+        // ==========================================
+        const PLANT_DIR = 'Plant_Images/';
+        const ZOMBIE_DIR = 'Zombie_Images/';
+        const SLOT_COUNT = 6;
+        
+        const MYSTERY_ICON = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiM0NDQiLz48dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIyNCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBhbGlnbm1lbnQtYmFzZWxpbmU9Im1pZGRsZSIgZmlsbD0iI2ZmZiI+PzwvdGV4dD48L3N2Zz4=';
+
+        // Master Pools
+        const plantFilenames = [
+            "AloeVera.png",
+            "Ampliflower.png",
+            "Beeshooter.png",
+            "BloodOrange.png",
+            "Blover.png",
+            "BonkChoy.png",
+            "BraveryShroom.png",
+            "CabbagePult.png",
+            "Cactus.png",
+            "Cattail.png",
+            "ChardGuard.png",
+            "CherryBomb.png",
+            "ChillyPepper.png",
+            "Chomper.png",
+            "CobCannon.png",
+            "CoffeeBean.png",
+            "Devourer.png",
+            "DoomShroom.png",
+            "ElectricPeashooter.png",
+            "FirePea.png",
+            "FireShroom.png",
+            "FlowerPot.png",
+            "FrostShroom.png",
+            "FumeShroom.png",
+            "Garlic.png",
+            "GatlingPea.png",
+            "GhostPepper.png",
+            "GloomShroom.png",
+            "GoldMagnet.png",
+            "GraveBuster.png",
+            "Hurrikale.png",
+            "HypnoShroom.png",
+            "IcePea.png",
+            "IceShroom.png",
+            "Jalapeno.png",
+            "KernelPult.png",
+            "LemonNade.png",
+            "LightningReed.png",
+            "LilyPad.png",
+            "LumeShroom.png",
+            "MagnetShroom.png",
+            //"Marigold.png",
+            "MelonPult.png",
+            "MortarShroom.png",
+            "OakArcher.png",
+            "Orbitus.png",
+            "Peashooter.png",
+            "PepperPult.png",
+            "PickledPepper.png",
+            "Plantern.png",
+            "PlasmaPea.png",
+            "Plasmawood.png",
+            "PotatoMine.png",
+            "PuffShroom.png",
+            "PultShroom.png",
+            "Pumpkin.png",
+            "Repeater.png",
+            "ScaredyShroom.png",
+            "SeaShroom.png",
+            "Seastar.png",
+            "ShootingStar.png",
+            "ShrinkingViolet.png",
+            "Snowpea.png",
+            "SpikeRock.png",
+            "Spikeweed.png",
+            "SplitPea.png",
+            "Squash.png",
+            "Starfruit.png",
+            "Sunflower.png",
+            "SunShroom.png",
+            "TallNut.png",
+            "TangleKelp.png",
+            "Thornmoss.png",
+            "Threepeater.png",
+            "Torchwood.png",
+            "TwinSunflower.png",
+            "UmbrellaLeaf.png",
+            "VineNut.png",
+            "VoltShroom.png",
+            "WallNut.png",
+            "WaterPot.png",
+            "WinterMelon.png"
+        ];
+
+        const zombieFilenames = [
+            "Agent.png",
+            "BackupDancer.png",
+            "Balloon.png",
+            "Basic.png",
+            "Bobsled.png",
+            "Blitzer.png",
+            "Boxhead.png",
+            "Brickhead.png",
+            "Bucket.png",
+            "Bungee.png",
+            "Catapult.png",
+            "Cone.png",
+            "Dancing.png",
+            "Digger.png",
+            "DolphinRider.png",
+            "DrZomboss.png",
+            "Fisherman.png",
+            "Flag.png",
+            "Football.png",
+            "Gargantuar.png",
+            "GigaFootball.png",
+            "GigaGargantuar.png",
+            "GigaGladiantuar.png",
+            "Gladiantuar.png",
+            "Grave.png",
+            "Hunter.png",
+            "IceBlock.png",
+            "Imp.png",
+            "JackInTheBox.png",
+            "Ladder.png",
+            "LeafBlower.png",
+            "Lumberjack.png",
+            "Newspaper.png",
+            "OlympicChampion.png",
+            "PhantomKnight.png",
+            "Pogo.png",
+            "PoleVaulting.png",
+            "Pylonhead.png",
+            "Rally.png",
+            "Scarecrow.png",
+            "ScareCrowStick.png",
+            "ScreenDoor.png",
+            "Scuttlehead.png",
+            "Skeleton.png",
+            "Snorkel.png",
+            "TargetZ.png",
+            "Trashcan.png",
+            "Vampire.png",
+            "Zomboni.png"
+        ];
+
+        // Subset Configuration (ps = pe + pr | zs = ze + zr)
+        const PR_COUNT = 20; // Number of random plants (pr)
+        const ZR_COUNT = 20; // Number of random zombies (zr)
+
+        const essentialPlants = ["Sunflower.png", "PuffShroom.png", "SunShroom.png", "CoffeeBean.png", "FlowerPot.png", "LilyPad.png", 
+        "Plantern.png", "GatlingPea.png", "GloomShroom.png", "WinterMelon.png", 
+        "GoldMagnet.png", "SpikeRock.png", "CobCannon.png", "FrostShroom.png","Devourer.png","Plasmawood.png",
+        "IcePea.png", "VineNut.png", "Thornmoss.png", "BraveryShroom.png", "Orbitus.png", "PlasmaPea.png", "ShootingStar.png"
+        ]; // (pe) # TwinSunflower Cattail removed because base plant is essential
+        const essentialZombies = ["Basic.png", "Grave.png", "Bobsled.png","Snorkel.png","DolphinRider.png"]; // (ze)
+
+        // Active generated pools for the match
+        let activePlantRoster = [];
+        let activeZombieRoster = [];
+
+        const KEYS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789".split("");
+        const ITEMS_PER_PAGE = 35;
+
+        // ==========================================
+        // 2. STATE MANAGEMENT
+        // ==========================================
+        let currentPhase = 'setup'; 
+        let mousePlayer = null;
+        let keyboardPlayer = null;
+        let draftedZombies = [];
+        let draftedPlants = [];
+        let currentPage = 0;
+
+        // ==========================================
+        // 3. INITIALIZATION & KEYBOARD CONTROLS
+        // ==========================================
+        window.onload = () => {
+            generateRosters(); // Build the subset pools
+            renderRosters();
+            renderTopSlots();
+        };
+
+        function generateRosters() {
+            // Helper to shuffle and pick N items securely
+            function getRandomSubset(pool, count) {
+                const shuffled = [...pool].sort(() => 0.5 - Math.random());
+                return shuffled.slice(0, count);
+            }
+
+            // Generate Plant Pool (ps = pe + pr)
+            const availableRandomPlants = plantFilenames.filter(p => !essentialPlants.includes(p));
+            const randomPlants = getRandomSubset(availableRandomPlants, PR_COUNT);
+            activePlantRoster = [...essentialPlants, ...randomPlants];
+
+            // Generate Zombie Pool (zs = ze + zr)
+            const availableRandomZombies = zombieFilenames.filter(z => !essentialZombies.includes(z));
+            const randomZombies = getRandomSubset(availableRandomZombies, ZR_COUNT);
+            activeZombieRoster = [...essentialZombies, ...randomZombies];
+        }
+
+        function startGame(selectedMouseRole) {
+            mousePlayer = selectedMouseRole;
+            keyboardPlayer = (mousePlayer === 'plant') ? 'zombie' : 'plant';
+            
+            document.getElementById('role-modal').style.display = 'none';
+            currentPhase = 'keyboard_draft';
+            
+            updateUIForPhase();
+            renderRosters();
+            renderTopSlots();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (currentPhase !== 'keyboard_draft') return;
+
+            const key = e.key.toUpperCase();
+
+            if (key === 'ARROWLEFT') return changePage(-1);
+            if (key === 'ARROWRIGHT') return changePage(1);
+            
+            if (key === 'BACKSPACE') {
+                const draftArray = keyboardPlayer === 'plant' ? draftedPlants : draftedZombies;
+                if (draftArray.length > 0) draftArray.pop();
+                renderTopSlots();
+                return;
+            }
+
+            if (key === 'ENTER') {
+                const draftArray = keyboardPlayer === 'plant' ? draftedPlants : draftedZombies;
+                if (draftArray.length === SLOT_COUNT) advancePhase();
+                return;
+            }
+
+            const keyIndex = KEYS.indexOf(key);
+            if (keyIndex !== -1) {
+                const globalIndex = (currentPage * ITEMS_PER_PAGE) + keyIndex;
+                const targetFilenames = keyboardPlayer === 'plant' ? activePlantRoster : activeZombieRoster;
+                const targetDir = keyboardPlayer === 'plant' ? PLANT_DIR : ZOMBIE_DIR;
+                const draftArray = keyboardPlayer === 'plant' ? draftedPlants : draftedZombies;
+
+                if (globalIndex < targetFilenames.length) {
+                    const fullPath = targetDir + targetFilenames[globalIndex];
+                    if (draftArray.length < SLOT_COUNT && !draftArray.includes(fullPath)) {
+                        draftArray.push(fullPath);
+                        renderTopSlots();
+                    }
+                }
+            }
+        });
+
+        // ==========================================
+        // 4. RENDERING & PAGINATION LOGIC
+        // ==========================================
+        function changePage(direction) {
+            const targetFilenames = keyboardPlayer === 'plant' ? activePlantRoster : activeZombieRoster;
+            const maxPages = Math.ceil(targetFilenames.length / ITEMS_PER_PAGE);
+            
+            currentPage += direction;
+            if (currentPage < 0) currentPage = 0;
+            if (currentPage >= maxPages) currentPage = maxPages - 1;
+            
+            renderRosters();
+        }
+
+        function renderRosters() {
+            renderGrid('plants-roster', activePlantRoster, PLANT_DIR, 'plant');
+            renderGrid('zombies-roster', activeZombieRoster, ZOMBIE_DIR, 'zombie');
+            
+            if (!keyboardPlayer) return;
+
+            const targetPanel = keyboardPlayer === 'plant' ? document.getElementById('plant-panel') : document.getElementById('zombie-panel');
+            let pageControls = document.getElementById('page-controls');
+            
+            if (!pageControls) {
+                pageControls = document.createElement('div');
+                pageControls.id = 'page-controls';
+                pageControls.className = 'pagination-controls';
+                targetPanel.appendChild(pageControls);
+            }
+            
+            const targetFilenames = keyboardPlayer === 'plant' ? activePlantRoster : activeZombieRoster;
+            const maxPages = Math.ceil(targetFilenames.length / ITEMS_PER_PAGE);
+            
+            pageControls.innerHTML = maxPages > 1 ? `
+                <button class="page-btn" onclick="changePage(-1)" ${currentPage === 0 ? 'disabled' : ''}>◀ Prev Page</button>
+                <span>Page ${currentPage + 1} of ${maxPages}</span>
+                <button class="page-btn" onclick="changePage(1)" ${currentPage === maxPages - 1 ? 'disabled' : ''}>Next Page ▶</button>
+            ` : '';
+        }
+
+        function renderGrid(containerId, filenames, directory, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; 
+
+            let startIdx = 0;
+            let endIdx = filenames.length;
+            
+            if (type === keyboardPlayer) {
+                startIdx = currentPage * ITEMS_PER_PAGE;
+                endIdx = Math.min(startIdx + ITEMS_PER_PAGE, filenames.length);
+            }
+
+            const currentView = filenames.slice(startIdx, endIdx);
+
+            currentView.forEach((filename, localIndex) => {
+                const globalIndex = startIdx + localIndex;
+                const fullPath = directory + filename;
+                const unitDiv = document.createElement('div');
+                unitDiv.className = 'unit';
+                
+                unitDiv.onclick = () => selectUnit(fullPath, type);
+
+                const img = document.createElement('img');
+                img.src = fullPath;
+                img.onerror = function() { this.src = MYSTERY_ICON; };
+                unitDiv.appendChild(img);
+
+                if (type === keyboardPlayer && localIndex < 35) {
+                    const letterSpan = document.createElement('span');
+                    letterSpan.className = 'zombie-letter';
+                    letterSpan.innerText = KEYS[localIndex]; 
+                    unitDiv.appendChild(letterSpan);
+                }
+
+                const draftArray = type === 'plant' ? draftedPlants : draftedZombies;
+                if (type === mousePlayer && draftArray.includes(fullPath)) {
+                    unitDiv.classList.add('selected');
+                }
+
+                container.appendChild(unitDiv);
+            });
+        }
+
+        function renderTopSlots() {
+            renderSideSlots('plant-slots', draftedPlants, 'plant');
+            renderSideSlots('zombie-slots', draftedZombies, 'zombie');
+            
+            const btn = document.getElementById('main-btn');
+            if (currentPhase === 'setup') {
+                btn.disabled = true;
+            } else if (currentPhase === 'keyboard_draft') {
+                const draftArray = keyboardPlayer === 'plant' ? draftedPlants : draftedZombies;
+                btn.disabled = draftArray.length !== SLOT_COUNT;
+            } else if (currentPhase === 'mouse_draft') {
+                const draftArray = mousePlayer === 'plant' ? draftedPlants : draftedZombies;
+                btn.disabled = draftArray.length !== SLOT_COUNT;
+            }
+        }
+
+        function renderSideSlots(containerId, draftArray, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            for (let i = 0; i < SLOT_COUNT; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+
+                if (draftArray[i]) {
+                    const img = document.createElement('img');
+                    
+                    if (type === keyboardPlayer && currentPhase !== 'reveal') {
+                        img.src = MYSTERY_ICON;
+                    } else {
+                        img.src = draftArray[i];
+                    }
+                    slot.appendChild(img);
+
+                    slot.classList.add('clickable');
+                    slot.onclick = () => removeUnit(i, type);
+                }
+                container.appendChild(slot);
+            }
+        }
+
+        // ==========================================
+        // 5. GAME LOGIC & PHASING
+        // ==========================================
+        function selectUnit(fullPath, type) {
+            if (currentPhase === 'setup') return;
+
+            if (currentPhase === 'keyboard_draft' && type === keyboardPlayer) {
+                if (keyboardPlayer === 'plant' && draftedPlants.length < SLOT_COUNT && !draftedPlants.includes(fullPath)) draftedPlants.push(fullPath);
+                if (keyboardPlayer === 'zombie' && draftedZombies.length < SLOT_COUNT && !draftedZombies.includes(fullPath)) draftedZombies.push(fullPath);
+            } else if (currentPhase === 'mouse_draft' && type === mousePlayer) {
+                if (mousePlayer === 'plant' && draftedPlants.length < SLOT_COUNT && !draftedPlants.includes(fullPath)) draftedPlants.push(fullPath);
+                if (mousePlayer === 'zombie' && draftedZombies.length < SLOT_COUNT && !draftedZombies.includes(fullPath)) draftedZombies.push(fullPath);
+            }
+            renderRosters();
+            renderTopSlots();
+        }
+
+        function removeUnit(index, type) {
+            if (currentPhase === 'keyboard_draft' && type === keyboardPlayer) {
+                type === 'plant' ? draftedPlants.splice(index, 1) : draftedZombies.splice(index, 1);
+            } else if (currentPhase === 'mouse_draft' && type === mousePlayer) {
+                type === 'plant' ? draftedPlants.splice(index, 1) : draftedZombies.splice(index, 1);
+            }
+            renderRosters();
+            renderTopSlots();
+        }
+
+        function updateUIForPhase() {
+            const statusText = document.getElementById('status-text');
+            const plantPanel = document.getElementById('plant-panel');
+            const zombiePanel = document.getElementById('zombie-panel');
+            const btn = document.getElementById('main-btn');
+            const copyBtn = document.getElementById('copy-btn');
+
+            if (currentPhase === 'keyboard_draft') {
+                statusText.innerHTML = `<strong>Phase 1: Keyboard Draft.</strong> The ${keyboardPlayer} player picks ${SLOT_COUNT} units secretly using A-Z and 1-9 from this random subset of units. Backspace removes the last pick, and Enter confirms the draft. Use arrows to navigate between pages.`;
+                btn.innerText = `Confirm ${keyboardPlayer} Deck`;
+                
+                if (keyboardPlayer === 'plant') {
+                    zombiePanel.classList.add('disabled-panel');
+                    plantPanel.classList.remove('disabled-panel');
+                } else {
+                    plantPanel.classList.add('disabled-panel');
+                    zombiePanel.classList.remove('disabled-panel');
+                }
+            } else if (currentPhase === 'mouse_draft') {
+                statusText.innerHTML = `<strong>Phase 2: Mouse Draft.</strong> The ${mousePlayer} player may now click to choose ${SLOT_COUNT} units.`;
+                btn.innerText = "Reveal Both Decks";
+                
+                if (mousePlayer === 'plant') {
+                    zombiePanel.classList.add('disabled-panel');
+                    plantPanel.classList.remove('disabled-panel');
+                } else {
+                    plantPanel.classList.add('disabled-panel');
+                    zombiePanel.classList.remove('disabled-panel');
+                }
+            } else if (currentPhase === 'reveal') {
+                statusText.innerHTML = "<strong>Phase 3: The Matchup!</strong> Both decks are revealed. Good luck.";
+                btn.style.display = 'none';
+                copyBtn.style.display = 'inline-block';
+                plantPanel.classList.add('disabled-panel');
+                zombiePanel.classList.add('disabled-panel');
+            }
+        }
+
+        function advancePhase() {
+            if (currentPhase === 'keyboard_draft') {
+                currentPhase = 'mouse_draft';
+            } else if (currentPhase === 'mouse_draft') {
+                currentPhase = 'reveal';
+            }
+            updateUIForPhase();
+            renderRosters();
+            renderTopSlots();
+        }
+
+        // ==========================================
+        // 6. CLIPBOARD FUNCTIONALITY
+        // ==========================================
+        function copyDecksToClipboard() {
+            const formatName = (path) => path.split('/').pop().split('.')[0];
+
+            const plantNames = draftedPlants.map(formatName).join(', ');
+            const zombieNames = draftedZombies.map(formatName).join(', ');
+            
+            const exportString = `Plants: ${plantNames}\nZombies: ${zombieNames}`;
+
+            const textArea = document.createElement("textarea");
+            textArea.value = exportString;
+            document.body.appendChild(textArea);
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            
+            document.body.removeChild(textArea);
+
+            const copyBtn = document.getElementById('copy-btn');
+            const originalText = copyBtn.innerText;
+            copyBtn.innerText = "Copied to Clipboard!";
+            setTimeout(() => { copyBtn.innerText = originalText; }, 2000);
+        }
+</script>
+</body>
+</html>
