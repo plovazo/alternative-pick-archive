@@ -1,0 +1,103 @@
+Agent.png
+BackupDancer.png
+Balloon.png
+Basic.png
+Blitzer.png
+Boxhead.png
+Brickhead.png
+Bucket.png
+Bungee.png
+Catapult.png
+Cone.png
+Dancing.png
+Digger.png
+DolphinRider.png
+DrZomboss.png
+DuckyTube.png
+filenames copy.txt
+filenames.txt
+Fisherman.png
+Flag.png
+Football.png
+Gargantuar.png
+GigaFootball.png
+GigaGargantuar.png
+GigaGladiantuar.png
+Gladiantuar.png
+Grave.png
+Hunter.png
+IceBlock.png
+Imp.png
+JackInTheBox.png
+Ladder.png
+LeafBlower.png
+Lumberjack.png
+Newspaper.png
+OlympicChampion.png
+PhantomKnight.png
+Pogo.png
+PoleVaulting.png
+Pylonhead.png
+Rally.png
+Scarecrow.png
+ScareCrowStick.png
+ScreenDoor.png
+Scuttlehead.png
+Skeleton.png
+Snorkel.png
+TargetZ.png
+Trashcan.png
+Vampire.png
+Zomboni.png
+
+const zombieFilenames = [
+    "Agent.png",
+    "BackupDancer.png",
+    "Balloon.png",
+    "Basic.png",
+    "Blitzer.png",
+    "Boxhead.png",
+    "Brickhead.png",
+    "Bucket.png",
+    "Bungee.png",
+    "Catapult.png",
+    "Cone.png",
+    "Dancing.png",
+    "Digger.png",
+    "DolphinRider.png",
+    "DrZomboss.png",
+    "DuckyTube.png",
+    "Fisherman.png",
+    "Flag.png",
+    "Football.png",
+    "Gargantuar.png",
+    "GigaFootball.png",
+    "GigaGargantuar.png",
+    "GigaGladiantuar.png",
+    "Gladiantuar.png",
+    "Grave.png",
+    "Hunter.png",
+    "IceBlock.png",
+    "Imp.png",
+    "JackInTheBox.png",
+    "Ladder.png",
+    "LeafBlower.png",
+    "Lumberjack.png",
+    "Newspaper.png",
+    "OlympicChampion.png",
+    "PhantomKnight.png",
+    "Pogo.png",
+    "PoleVaulting.png",
+    "Pylonhead.png",
+    "Rally.png",
+    "Scarecrow.png",
+    "ScareCrowStick.png",
+    "ScreenDoor.png",
+    "Scuttlehead.png",
+    "Skeleton.png",
+    "Snorkel.png",
+    "TargetZ.png",
+    "Trashcan.png",
+    "Vampire.png",
+    "Zomboni.png"
+];
